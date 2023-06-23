@@ -131,7 +131,7 @@ try
 catch
 end
 notes  = ['   % ' mytimestamp caller ];
-y.history = [y.history {['x=cat(' num2str(dim) name ')' notes]}];
+y.history = [y.history; {['x=cat(' num2str(dim) name ')' notes]}];
 
 for ii=2:ndso;
   if ~isempty(varargin{ii}.name) & ~strcmp(y.name,varargin{ii}.name);
@@ -141,7 +141,7 @@ for ii=2:ndso;
       y.name = [y.name ',' varargin{ii}.name];
     end
   end
-  y.history = [y.history {sprintf('  + CONCAT "%s" (moddate: %s)',varargin{ii}.uniqueid,timestamp(varargin{ii}.moddate))}];
+  y.history = [y.history; {sprintf('  + CONCAT "%s" (moddate: %s)',varargin{ii}.uniqueid,timestamp(varargin{ii}.moddate))}];
 end
 y.author  = varargin{1}.author;
 for ii=2:ndso;

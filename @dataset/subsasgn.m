@@ -232,7 +232,7 @@ if nnargin==3
           if isempty(x.imagesize)
             x.imagesize = [size(x.data,1) 1];
           end
-          if isempty(x.imagemode)
+          if isempty(x.imagemode)||x.imagemode==0
             x.imagemode = 1;
           end
         end

@@ -249,19 +249,18 @@ elseif xv<=pv
     data.uniqueid = uid;
     data.history = [data.history {['Assigned UniqueID: ' uid]}];
   end
-
+%data.history = [data.history {['=== Loaded By ' userinfotag ' ' timestamp]}];
   if ~isa(data,'dataset');
-    %make sure fields are in correct order (4/8/03)
-    new = struct(dataset);
-    for k=fieldnames(data)';
-      new = setfield(new,k{:},getfield(data,k{:}));
-    end
-    %and call it a dataset
-    data = class(new,'dataset');
+    data = struct2dataset(data)
+%     %make sure fields are in correct order (4/8/03)
+%     new = dataset;
+%     for k=fieldnames(data)';
+%       new = setfield(new,k{:},getfield(data,k{:}));
+%     end
   end
   
 end
 
 %Always add users "loaded" stamp to history field
-data.history = [data.history {['=== Loaded By ' userinfotag ' ' timestamp]}];
+data.history = [data.history; {['=== Loaded By ' userinfotag ' ' timestamp]}];
   

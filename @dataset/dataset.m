@@ -1,4 +1,4 @@
-function data = dataset(varargin)
+classdef dataset
 %DATASET DataSet object class constructor.
 % Creates a DataSet object which can contain data along with related
 %  informational fields including: 
@@ -70,134 +70,181 @@ function data = dataset(varargin)
 %jms 4/24/03 modified help (includ->include)
 %    -renamed "includ" to "include"
 %rsk 09/08/04 add image size and mode.
+%rsk 06/13/23 update to use classdef
 
-%Construct a dataset object template
-b.name      = '';            %variable name   char
-b.type      = '';            %data type       char
-                               %   data  {default}
-                               %   image
-                               %   batch
-b.author      = '';            %dataset author  char
-b.date        = [];            %creation date
-b.moddate     = [];            %last modified date
-b.imagesize   = [];            %size of an image if type = image 
-b.imagemode   = [];            %location of image spatial mode
-b.data        = [];            %double array
 
-%define valid classes for dataset of type "data" 
-validclasses = {'double','single','logical','int8','int16','int32','uint8','uint16','uint32'};
 
-if nargin==0
-  nmodes    = 2;
-elseif nargin>0
-  if nargin>1;
-    try
-      a = cat(2,varargin{:});
-    catch
-      error('Cannot combine these items into a single DataSet object')
-    end
-  else
-    a = varargin{1};
+  %NOTES:
+  %  * Use uuid = char(matlab.lang.internal.uuid()) for unique id instead or
+  %    makeuniqueid.
+  %  * Needed to overload 'horzcat' and 'vertcat' to make [] concatenation
+  %    work. 
+  %  * Need to follow these guidelines for DSO, all methods should be
+  %    overloaded for things to work correctly:
+  %    https://www.mathworks.com/help/matlab/matlab_oop/methods-that-modify-default-behavior.html 
+  %  * See note in overloaded end.m about indexing updates for :, we may
+  %    want to update all indexing soon.
+  %  * Can use https://www.mathworks.com/help/matlab/customize-object-indexing.html 
+  %    to better organize our indexing code. Current subsref and subsassign
+  %    are gigantic and hard to understand. 
+  %  * See TMW dataset object for example of more unified storage, meta
+  %    data is in one container. 
+
+  properties
+    %Description data
+    name (1,:) char = ''
+    type (1,:) char {mustBeMember(type,{'data','image','batch'})} = 'data'
+    moddate (1,6) double %Last modification date (output from clock)
+    author (1,:) char = ''
+    description (:,:) char = ''
+
+    %Raw data (numeric or cell-for batch)
+    data
+
+    %Primary set data
+    label (:,2,:) cell = cell(2,2,1)
+    axisscale (:,2,:) cell = cell(2,2,1)
+    class (:,2,:) cell = cell(2,2,1)
+    include (:,2,:) cell = cell(2,2,1)
+
+    %Image data
+    imagemode (1,:) double
+    imagesize (1,:) double
+    imageaxisscale (:,2,:) cell = cell(2,2,1)
+
+    %Other meta data
+    %NOTE: Loop in constructor adds default values.
+    title (:,2,:) cell = cell(2,2,1)
+    classlookup (:,:) cell = cell(2,1)
+    axistype (:,:) cell = cell(2,1)
+    imageaxistype (:,:) cell = cell(2,1)
+    userdata = []
+    history (:,1) cell = cell(1,1)
   end
-  if isempty(a)
-    nmodes  = 2;
-    b.type  = 'data';        %default
-  elseif any(strcmp(class(a),validclasses))
-    nmodes  = ndims(a);
-    b.type  = 'data';
-    b.data  = a;
-  elseif isa(a,'cell')
-    if (size(a,1)>1)&(size(a,2)>1)
-      error('Not set up for multidimensional cells.')
-    else
-      if size(a,2)>1; a=a'; end; %flip to be COLUMN vector
-      nmodes  = ndims(a{1});     %number of modes for each cell
-      csize   = size(a{1});
-      csize   = csize(2:end);    %size of dimensions~=1
-      if ~isnumeric(a{1})
-        error('Batch DataSet objects can only be created from numeric types.');
-      end
-      if length(a)>1             %make certain that contents of all
-        for ii=2:length(a)       % cells are same size except dim 1
-          if ~isnumeric(a{ii})
-            error('Batch DataSet objects can only be created from numeric types.');
+
+  properties(Dependent)
+    size
+    sizestr
+    imagesizestr
+    foldedsize
+    foldedsizestr
+    classid
+  end
+
+  properties(GetAccess='public', SetAccess='private')
+    date (1,6) double = clock %Date of creation
+    uniqueid (1,:) char = makeuniqueid %Not shown in disp
+    datasetversion (1,:) char = '7.0' %Not shown in disp
+  end
+
+  methods
+    function a = dataset(varargin)
+      %Main constructor.
+      %Note that 'a' is instantiated automatically as a dataset object
+      %unlike old syntax that required code to class the structure before
+      %output.
+
+      %Class of array that can to into .data field.
+      validclasses = {'double','single','logical','int8','int16','int32','uint8','uint16','uint32'};
+
+
+      if nargin==0
+        nmodes    = 2;
+      elseif nargin>0
+        if nargin>1;
+          try
+            rawdata = cat(2,varargin{:});
+          catch
+            error('Cannot combine these items into a single DataSet object')
           end
-          csize2 = size(a{ii});
-          csize2 = csize2(2:end);
-          if any(csize2~=csize)
-            error('All modes except 1 must be same size.')
+        else
+          rawdata = varargin{1};
+        end
+        if isempty(rawdata)
+          nmodes  = 2;
+          a.type  = 'data';        %default
+        elseif any(strcmp(class(rawdata),validclasses))
+          nmodes  = ndims(rawdata);
+          a.type  = 'data';
+          a.data  = rawdata;
+        elseif isa(rawdata,'cell')
+          if (size(rawdata,1)>1)&(size(rawdata,2)>1)
+            error('Not set up for multidimensional cells.')
+          else
+            if size(rawdata,2)>1; rawdata=rawdata'; end; %flip to be COLUMN vector
+            nmodes  = ndims(rawdata{1});     %number of modes for each cell
+            csize   = size(rawdata{1});
+            csize   = csize(2:end);    %size of dimensions~=1
+            if ~isnumeric(rawdata{1})
+              error('Batch DataSet objects can only be created from numeric types.');
+            end
+            if length(rawdata)>1             %make certain that contents of all
+              for ii=2:length(rawdata)       % cells are same size except dim 1
+                if ~isnumeric(rawdata{ii})
+                  error('Batch DataSet objects can only be created from numeric types.');
+                end
+                csize2 = size(rawdata{ii});
+                csize2 = csize2(2:end);
+                if any(csize2~=csize)
+                  error('All modes except 1 must be same size.')
+                end
+              end
+            end
+            a.type  = 'batch';
+            a.data  = rawdata;
           end
-        end      
+        else
+          error(['Unable to create a dataset to contain variables of class ' class(rawdata)])
+        end
       end
-      b.type  = 'batch';
-      b.data  = a;
+
+      for ii = 1:nmodes
+        a.label{ii,1,1}       = ''; a.label{ii,2,1}     = ''; %'Set 1';
+        a.axisscale{ii,1,1}   = []; a.axisscale{ii,2,1} = ''; %'Set 1';
+        a.imageaxisscale{ii,1,1}   = []; a.axisscale{ii,2,1} = ''; %'Set 1';
+        a.title{ii,1,1}       = ''; a.title{ii,2,1}     = ''; %'Set 1';
+        a.class{ii,1,1}       = []; a.class{ii,2,1}     = ''; %'Set 1';
+        a.classlookup{ii,1}   = {}; %Assign empty to set 1, additional sets in second mode.
+        a.axistype{ii,1}   = 'none'; %Assign empty to set 1, additional sets in second mode.
+        a.imageaxistype{ii,1}   = 'none'; %Assign empty to set 1, additional sets in second mode.
+      end
+
+
+      %Populate include field.
+      if nargin==0
+        a.include       = cell(2,2);  %empty cell with size = ndims x 1  %nbg changed 5/11/01
+      elseif ~strcmp(a.type,'batch')
+        a.include       = cell(nmodes,2);  %nbg added 5/11/01
+        for ii=1:nmodes
+          a.include{ii} = [1:size(a.data,ii)];
+        end
+      else
+        a.include       = cell(nmodes,2);  %nbg added 5/11/01
+        a.include{1}    = [1:length(a.data)];
+        for ii=2:nmodes
+          a.include{ii} = [1:size(a.data{1},ii)];
+        end
+        a.axisscale{1,1,1} = cell(length(a),1);
+        a.imageaxisscale{1,1,1} = cell(length(a),1);
+      end
+
+
+      [tstamp,time] = timestamp;
+      a.history{1}   = ['Created by ' userinfotag ' ' tstamp];
+      if nargin>0
+        a.name    = inputname(1);
+      end
+      a.moddate = a.date;
     end
-  else
-    error(['Unable to create a dataset to contain variables of class ' class(a)])
-  end
-end
 
-b.label       = cell(2,2,1);   %empty cell
-b.axisscale   = cell(2,2,1);   %empty cell
-b.imageaxisscale   = cell(2,2,1);   %empty cell
-b.title       = cell(2,2,1);   %empty cell
-b.class       = cell(2,2,1);   %empty cell
-b.include     = cell(2,2,1);   %empty cell
+    function newobj = horzcat(varargin)
+      newobj = cat(2,varargin{:});
+    end
 
-%empty cell, has same name as class so use second dimension for 'set' rather than 3rd.
-b.classlookup = cell(2,1);
-b.axistype    = cell(2,1);
-b.imageaxistype    = cell(2,1);
+    function newobj = vertcat(varargin)
+      newobj = cat(1,varargin{:});
+    end
 
-for ii      = 1:nmodes
-  b.label{ii,1,1}       = ''; b.label{ii,2,1}     = ''; %'Set 1';
-  b.axisscale{ii,1,1}   = []; b.axisscale{ii,2,1} = ''; %'Set 1';
-  b.imageaxisscale{ii,1,1}   = []; b.axisscale{ii,2,1} = ''; %'Set 1';
-  b.title{ii,1,1}       = ''; b.title{ii,2,1}     = ''; %'Set 1';
-  b.class{ii,1,1}       = []; b.class{ii,2,1}     = ''; %'Set 1';
-  b.classlookup{ii,1}   = {}; %Assign empty to set 1, additional sets in second mode.
-  b.axistype{ii,1}   = 'none'; %Assign empty to set 1, additional sets in second mode.
-  b.imageaxistype{ii,1}   = 'none'; %Assign empty to set 1, additional sets in second mode.
-end
-
-if nargin==0
-  b.include       = cell(2,2);  %empty cell with size = ndims x 1  %nbg changed 5/11/01
-elseif ~isa(a,'cell')
-  b.include       = cell(nmodes,2);  %nbg added 5/11/01
-  for ii=1:nmodes
-    b.include{ii} = [1:size(b.data,ii)]; 
-  end
-else
-  b.include       = cell(nmodes,2);  %nbg added 5/11/01
-  b.include{1}    = [1:length(b.data)];
-  for ii=2:nmodes
-    b.include{ii} = [1:size(b.data{1},ii)]; 
-  end
-  b.axisscale{1,1,1} = cell(length(a),1);
-  b.imageaxisscale{1,1,1} = cell(length(a),1);
-end
-b.description    = '';       %character string
-b.userdata       = [];       %userdata
-
-b.datasetversion = '6.0';   %version number of the dataset object
-                             %this is hidden (can't be set) but
-                             %can be obtained using GET.
-b.history      = cell(1,1);  %changed in SET
-[tstamp,time] = timestamp;
-b.history{1}   = ['Created by ' userinfotag ' ' tstamp];
-b.uniqueid     = makeuniqueid(time);
-
-if nargin==0
-  data         = class(b,'dataset');
-elseif isa(a,'dataset')
-  data         = a;
-elseif any(strcmp(class(a),validclasses)) | isa(a,'cell');
-  data         = b; clear b
-  data.name    = inputname(1);
-  data.date    = clock;
-  data.moddate = data.date;
-  data         = class(data,'dataset');
-else
-  error(['Datasets can not be made from class ' class(a) ' variables'])
-end
+  end % methods
+end %classdef
 
