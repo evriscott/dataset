@@ -30,7 +30,7 @@ for ii=2:ndims(data.data)
   s       = [s,'x',int2str(size(data.data,ii))];
 end
 realstr = '';
-if ~isreal(data.data)
+if ~iscell(data.data) && ~isreal(data.data)
   realstr = ' (complex)';
 end
 disp([s,' [',class(data.data), realstr, ']'])
