@@ -251,7 +251,7 @@ elseif xv<=pv
   end
 %data.history = [data.history {['=== Loaded By ' userinfotag ' ' timestamp]}];
   if ~isa(data,'dataset');
-    data = struct2dataset(data)
+    data = struct2dataset(data);
 %     %make sure fields are in correct order (4/8/03)
 %     new = dataset;
 %     for k=fieldnames(data)';
