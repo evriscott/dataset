@@ -1,76 +1,76 @@
 classdef dataset
-%DATASET DataSet object class constructor.
-% Creates a DataSet object which can contain data along with related
-%  informational fields including: 
-%   
-%    name           : name of data set.
-%    author         : authors name.
-%    date           : date of creation.
-%    moddate        : date of last modification.
-%    type           : either 'data', 'batch' or 'image'.
-%    size           : size vector of data.
-%    sizestr        : string of size.
-%    imagesize      : size of image modes for type 'image' data. Should be
-%                     used to unfold/refold image data in .data field.
-%    imagesizestr   : string of imagesize.
-%    foldedsize     : size of folded image data returned by .imagedataf.
-%    foldedsizestr  : string of foldedsize.
-%    imagemode      : mode where spatial data has been unfolded to.
-%    imageaxisscale : axis scales for each image mode.
-%    imageaxisscalename  : descriptive name for each set of image axis scales.
-%    imageaxistype  : type of imageaxisscale to use with each mode of data, values
-%                     can be 'discrete' 'stick' 'continuous' 'none'.
-%    imagemap       : reference for included pixels of an image. Calls
-%                     function to display data.
-%    imagedata      : reference for image data, holds no data but will call
-%                     function to display folded data.
-%    data           : actual data consisting of any Matlab array of class
-%                     double, single, logical, or [u]int8/16/32.
-%    label          : text labels for each row, column, etc of data.
-%    labelname      : descriptive name for each set of labels.
-%    axisscale      : axes scales for each row, column, etc of data.
-%    axisscalename  : descriptive name for each set of axis scales.
-%    axistype       : type of axisscale to use with each mode of data, values
-%                     can be 'discrete' 'stick' 'continuous' 'none'.
-%    title          : axis titles for each row, column, etc of data.
-%    titlename      : descriptive name for each axis title.
-%    class          : class indentifiers for each row, column, etc of data.
-%    classname      : descriptive name for each set of class identifiers.
-%    classlookup    : lookup table for text names for each numeric class.
-%    classid        : a reference that assigns/returns a cell array of stings
-%                     based on the .classlookup table.
-%    include        : indices of rows, columns, etc to use from data (allows
-%                     "exclusion" of data without hard-deletion)
-%    userdata       : user defined content.
-%    description    : text description of DataSet content.
-%    history        : text description of modification history.
-%    uniqueid       : a unique identifier given to this DataSet.
-%    datasetversion : dataset object version.
-%
-% For more information on working with DataSet objects, see the methods: 
-%    DATASET/SUBSREF and DATASET/SUBSASGN
-% For more detail on DataSet functionality, see the DataObject documentation. 
-%
-%I/O: data = dataset(a);
-%
-%See also: DATASET/EXPLODE, DATASET/SUBSASGN, DATASET/SUBSREF
+  %DATASET DataSet object class constructor.
+  % Creates a DataSet object which can contain data along with related
+  %  informational fields including:
+  %
+  %    name           : name of data set.
+  %    author         : authors name.
+  %    date           : date of creation.
+  %    moddate        : date of last modification.
+  %    type           : either 'data', 'batch' or 'image'.
+  %    size           : size vector of data.
+  %    sizestr        : string of size.
+  %    imagesize      : size of image modes for type 'image' data. Should be
+  %                     used to unfold/refold image data in .data field.
+  %    imagesizestr   : string of imagesize.
+  %    foldedsize     : size of folded image data returned by .imagedataf.
+  %    foldedsizestr  : string of foldedsize.
+  %    imagemode      : mode where spatial data has been unfolded to.
+  %    imageaxisscale : axis scales for each image mode.
+  %    imageaxisscalename  : descriptive name for each set of image axis scales.
+  %    imageaxistype  : type of imageaxisscale to use with each mode of data, values
+  %                     can be 'discrete' 'stick' 'continuous' 'none'.
+  %    imagemap       : reference for included pixels of an image. Calls
+  %                     function to display data.
+  %    imagedata      : reference for image data, holds no data but will call
+  %                     function to display folded data.
+  %    data           : actual data consisting of any Matlab array of class
+  %                     double, single, logical, or [u]int8/16/32.
+  %    label          : text labels for each row, column, etc of data.
+  %    labelname      : descriptive name for each set of labels.
+  %    axisscale      : axes scales for each row, column, etc of data.
+  %    axisscalename  : descriptive name for each set of axis scales.
+  %    axistype       : type of axisscale to use with each mode of data, values
+  %                     can be 'discrete' 'stick' 'continuous' 'none'.
+  %    title          : axis titles for each row, column, etc of data.
+  %    titlename      : descriptive name for each axis title.
+  %    class          : class indentifiers for each row, column, etc of data.
+  %    classname      : descriptive name for each set of class identifiers.
+  %    classlookup    : lookup table for text names for each numeric class.
+  %    classid        : a reference that assigns/returns a cell array of stings
+  %                     based on the .classlookup table.
+  %    include        : indices of rows, columns, etc to use from data (allows
+  %                     "exclusion" of data without hard-deletion)
+  %    userdata       : user defined content.
+  %    description    : text description of DataSet content.
+  %    history        : text description of modification history.
+  %    uniqueid       : a unique identifier given to this DataSet.
+  %    datasetversion : dataset object version.
+  %
+  % For more information on working with DataSet objects, see the methods:
+  %    DATASET/SUBSREF and DATASET/SUBSASGN
+  % For more detail on DataSet functionality, see the DataObject documentation.
+  %
+  %I/O: data = dataset(a);
+  %
+  %See also: DATASET/EXPLODE, DATASET/SUBSASGN, DATASET/SUBSREF
 
-%Copyright Eigenvector Research, Inc. 2000
+  %Copyright Eigenvector Research, Inc. 2000
 
-%nbg 8/3/00, 8/16/00, 8/17/00, 8/30/00, 10/05/00, 10/09/00
-%nbg added 5/11/01  b.includ = cell(nmodes,2); (this is different from
-%    the previous version which used b.includ = cell(ndims) which didn't
-%    follow the convention of different modes on different rows
-%jms 5/30/01 added transposition of row-vector batch cell to column-vector
-%nbg 10/07/01 changed version from 2.01 to 3.01
-%jms 8/30/02 added validclasses string
-%    added empty dataset construction
-%jms 11/06/02 change version to 3.02
-%    updated help
-%jms 4/24/03 modified help (includ->include)
-%    -renamed "includ" to "include"
-%rsk 09/08/04 add image size and mode.
-%rsk 06/13/23 update to use classdef
+  %nbg 8/3/00, 8/16/00, 8/17/00, 8/30/00, 10/05/00, 10/09/00
+  %nbg added 5/11/01  b.includ = cell(nmodes,2); (this is different from
+  %    the previous version which used b.includ = cell(ndims) which didn't
+  %    follow the convention of different modes on different rows
+  %jms 5/30/01 added transposition of row-vector batch cell to column-vector
+  %nbg 10/07/01 changed version from 2.01 to 3.01
+  %jms 8/30/02 added validclasses string
+  %    added empty dataset construction
+  %jms 11/06/02 change version to 3.02
+  %    updated help
+  %jms 4/24/03 modified help (includ->include)
+  %    -renamed "includ" to "include"
+  %rsk 09/08/04 add image size and mode.
+  %rsk 06/13/23 update to use classdef
 
 
 
@@ -78,17 +78,17 @@ classdef dataset
   %  * Use uuid = char(matlab.lang.internal.uuid()) for unique id instead or
   %    makeuniqueid.
   %  * Needed to overload 'horzcat' and 'vertcat' to make [] concatenation
-  %    work. 
+  %    work.
   %  * Need to follow these guidelines for DSO, all methods should be
   %    overloaded for things to work correctly:
-  %    https://www.mathworks.com/help/matlab/matlab_oop/methods-that-modify-default-behavior.html 
+  %    https://www.mathworks.com/help/matlab/matlab_oop/methods-that-modify-default-behavior.html
   %  * See note in overloaded end.m about indexing updates for :, we may
   %    want to update all indexing soon.
-  %  * Can use https://www.mathworks.com/help/matlab/customize-object-indexing.html 
+  %  * Can use https://www.mathworks.com/help/matlab/customize-object-indexing.html
   %    to better organize our indexing code. Current subsref and subsassign
-  %    are gigantic and hard to understand. 
+  %    are gigantic and hard to understand.
   %  * See TMW dataset object for example of more unified storage, meta
-  %    data is in one container. 
+  %    data is in one container.
 
   properties
     %Description data
@@ -245,6 +245,16 @@ classdef dataset
       newobj = cat(1,varargin{:});
     end
 
-  end % methods
+  end % ordinary methods
+
+  methods (Static)
+
+    function [out,msg] = struct2dataset(in)
+      %This function is long so put it in private folder. Doesn't seem to
+      %work as normal method (not in private).
+      [out,msg] = struct2ds(in)
+    end
+    
+  end % static methods
 end %classdef
 
