@@ -262,5 +262,5 @@ elseif xv<=pv
 end
 
 %Always add users "loaded" stamp to history field
-data.history = [data.history; {['=== Loaded By ' userinfotag ' ' timestamp]}];
+data.history = [x.history'; {['=== Loaded By ' userinfotag ' ' timestamp]}];
   
