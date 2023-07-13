@@ -47,10 +47,6 @@ switch nargin
     vec = varargin{2};
 end
 
-if ~isdataset(x)
-  x = dataset(x);
-end
-
 if nargout==0 | (nargout==1 & nargin==2)
   %if we will be displaying or sending back limited text results,
   %limit x to only those columns we care about (speeds up for text display)
@@ -135,7 +131,7 @@ stdv = std(x,[],1) ;
 N    = size(x,1)*rvones ;
 minx = min(x,[],1) ;
 maxx = max(x,[],1) ;
-p    = pctile1(x,[10 25 50 75 90]);
+p    = prctile(x,[10 25 50 75 90]);
 
 skewns = @(x) (sum((x-mean(x)).^3)./length(x)) ./ (var(x,1).^1.5);
 kurtss = @(x) (sum((x-mean(x)).^4)./length(x)) ./ (var(x,1).^2);
