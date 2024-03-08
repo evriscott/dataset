@@ -25,3 +25,9 @@ jobs:
         if: always()
         with:
           command: ver
+
+      # Run tests
+      - name: Run tests and generate artifacts
+        uses: matlab-actions/run-tests@v2
+        with:
+          test-results-junit: test-results/results.xml
