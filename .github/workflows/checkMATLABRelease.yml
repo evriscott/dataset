@@ -26,7 +26,7 @@ jobs:
         uses: matlab-actions/run-command@v2
         if: always()
         with:
-          command: addpath(pwd);addpath('tests');testSmoke.m 
+          command: addpath(pwd);addpath('tests');run('./tests/testSmoke.m') 
           #command: ver; mydir=pwd;disp(mydir); ls;b=dataset();disp(b)
 
       # Run tests
