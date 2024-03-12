@@ -2,6 +2,11 @@ name: z - Check MATLAB Release
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - 'README.MD'
+      - '.github/workflows/**'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
