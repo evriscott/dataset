@@ -13,9 +13,9 @@ disp(['       type: ',data.type])
 disp(['     author: ',data.author])
 s         = data.date;
 if isempty(s)
-  disp(['       date:'])
+  disp(['create date:'])
 else
-  disp(['       date: ',datestr(datenum(s(1),s(2),s(3),s(4),s(5),s(6)),0)])
+  disp(['create date: ',datestr(datenum(s(1),s(2),s(3),s(4),s(5),s(6)),0)])
 end
 s         = data.moddate;
 if isempty(s)
