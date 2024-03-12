@@ -147,7 +147,7 @@ classdef dataset
       %Class of array that can to into .data field.
       validclasses = {'double','single','logical','int8','int16','int32','uint8','uint16','uint32'};
 
-
+      error('ddddd')
       if nargin==0
         nmodes    = 2;
       elseif nargin>0
