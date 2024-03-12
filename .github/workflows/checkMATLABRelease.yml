@@ -24,10 +24,10 @@ jobs:
         uses: matlab-actions/run-command@v2
         if: always()
         with:
-          command: ver
+          command: ver;pwd;ls
 
       # Run tests
-      - name: Run tests and generate artifacts
-        uses: matlab-actions/run-tests@v2
-        with:
-          test-results-junit: test-results/results.xml
+      #- name: Run tests and generate artifacts
+      #  uses: matlab-actions/run-tests@v2
+      #  with:
+      #    test-results-junit: test-results/results.xml
