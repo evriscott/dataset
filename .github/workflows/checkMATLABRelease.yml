@@ -24,7 +24,7 @@ jobs:
         uses: matlab-actions/run-command@v2
         if: always()
         with:
-          command: ver;pwd;ls
+          command: ver; mydir=pwd;disp(mydir); ls;b=dataset();
 
       # Run tests
       #- name: Run tests and generate artifacts
